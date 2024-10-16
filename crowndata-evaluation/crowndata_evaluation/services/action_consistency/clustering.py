@@ -1,6 +1,7 @@
 import numpy as np
 from typing import Dict
 import sklearn.cluster
+from scipy.spatial import cKDTree
 
 
 def sklearn_cluster_wrapper(
@@ -32,6 +33,7 @@ def sklearn_cluster_wrapper(
             f"{class_name} does not contain any uppercase letters. Use the class version instead of the method."
         )
 
+    # TODO: Edge case empty data
     clusters = {}
     clustering_alg = getattr(sklearn.cluster, class_name)(**args)
     labels = clustering_alg.fit_predict(data)
@@ -48,50 +50,78 @@ def sklearn_cluster_wrapper(
 
 
 def define_clusters(data: np.ndarray, epsilon: float) -> Dict[int, np.ndarray]:
-    r"""
-    Define clusters for a set of states or actions based on epsilon distance.
+    """Cluster data points based on epsilon distance using scipy's cKDTree.
 
-    For each state/action ``x_i``, we define a cluster ``C(x_i)`` as:
-
-    .. math::
-        C(x_i) = \{ x_j | \|x_i - x_j\| \leq \epsilon \}
-
-    where :math:`\|x_i - x_j\|` is the Euclidean distance between state/action
-    ``x_i`` and ``x_j``.
+    This algorithm groups data points into clusters where points within each
+    cluster are at most 'epsilon' distance apart.
 
     Parameters
     ----------
-    data : np.ndarray
-        State or action data to cluster. (x, y, z, rotation_x, rotation_y, rotation_z)
+    data : array-like of shape (n_samples, n_features)
+        The input data to cluster.
     epsilon : float
-        The coverage distance for clustering.
+        The maximum distance between two samples for them to be considered
+        as in the same neighborhood.
 
     Returns
     -------
-    Dict[int, np.ndarray]
-        A dictionary where each key is a cluster index, and the value is the
-        states or actions in that cluster.
+    clusters : dict
+        A dictionary where each key is a cluster label (integer) and the value
+        is an array of shape (n_samples_in_cluster, n_features) containing the
+        data points in that cluster.
+
+    Notes
+    -----
+    - Uses scipy's cKDTree for efficient nearest neighbor queries.
+    - Empty input data will return an empty dictionary.
+
+    The algorithm can be described mathematically as follows:
+
+    1. For each point x_i in the dataset X:
+       - Find all points x_j such that ||x_i - x_j|| <= epsilon
+       - These points form a neighborhood N_i
+
+    2. A cluster C_k is formed by the union of neighborhoods that intersect:
+       C_k = Union(N_i) for all i where N_i intersects with any N_j in C_k
+
+    3. The process continues until all points are assigned to a cluster.
+
+    Examples
+    --------
+    >>> data = np.array([[1, 1, 1, 1, 1, 1], [1.5, 1, 1, 1, 1, 1]])
+    >>> epsilon = 1
+    >>> define_clusters(data, epsilon)
+    {0: array([[1, 1, 1, 1, 1, 1],
+               [1.5, 1, 1, 1, 1, 1]])}
     """
-    # TODO 1: Can we refer the scipy dbscan function to implement this?
-    # TODO 2: Does the translation and rotation need to be considered separately to define clusters?
-    # should we count distance (x,y,z) and distance(rotation_x, rotation_y, rotation_z) separately?
-    # https://github.com/scikit-learn/scikit-learn/blob/main/sklearn/cluster/_dbscan.py
-    # paper: https://www.dbs.ifi.lmu.de/Publikationen/Papers/KDD-96.final.frame.pdf
 
-    clusters = {}
-    cluster_idx = 0
+    if len(data) == 0:
+        return {}
+
+    tree = cKDTree(data)
+    neighbors = tree.query_ball_tree(tree, r=epsilon)
+
+    clusters: Dict[int, np.ndarray] = {}
     visited = np.zeros(len(data), dtype=bool)
-
-    # TODO: manual writen clustering, replace to use sklearn.cluster.DBSCAN for better correctness
+    cluster_idx = 0
 
     for i in range(len(data)):
         if not visited[i]:
-            cluster = [i]
-            for j in range(i + 1, len(data)):
-                if np.linalg.norm(data[i] - data[j]) <= epsilon:
-                    cluster.append(j)
-                    visited[j] = True
-            clusters[cluster_idx] = data[cluster]
+            cluster_points = []
+            stack = [i]
+            visited[i] = True
+
+            while stack:
+                current = stack.pop()
+                cluster_points.append(current)
+
+                for neighbor in neighbors[current]:
+                    if not visited[neighbor]:
+                        visited[neighbor] = True
+                        stack.append(neighbor)
+
+            cluster_points.sort()
+            clusters[cluster_idx] = data[cluster_points]
             cluster_idx += 1
 
     return clusters
