@@ -115,3 +115,9 @@ def forward_kinematics(
                     break
 
     return positions
+
+
+def find_joint(robot, joint_name):
+    for joint in robot.joints:
+        if joint.name == joint_name:
+            return joint

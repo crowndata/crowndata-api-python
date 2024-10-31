@@ -27,7 +27,7 @@ def read_trajectory_json(data_name: str, joint: str) -> np.ndarray:
             f"Expected data_name to be a string, but got {type(data_name).__name__}"
         )
 
-    file_path = f"{data_dir}/data/{data_name}/trajectories/{joint}__trajectory.json"
+    file_path = f"{data_dir}/assets/{data_name}/trajectories/{joint}__trajectory.json"
 
     with open(file_path, "r") as file:
         data = json.load(file)
@@ -57,7 +57,7 @@ def fetch_trajectory_json(data_name: str, joint: str) -> np.ndarray:
     Raises:
         HTTPException: If fetch failed.
     """
-    # Your logic to read the JSON file/data
+
     try:
         return read_trajectory_json(data_name=data_name, joint=joint)
 
@@ -109,7 +109,7 @@ def fetch_information_json(data_name: str) -> Dict:
             )
 
         # Define the file path
-        file_path = f"{data_dir}/data/{data_name}/information.json"
+        file_path = f"{data_dir}/assets/{data_name}/information.json"
 
         # Open and read the JSON file
         with open(file_path, "r") as file:
@@ -145,7 +145,7 @@ def fetch_joint_json(data_name: str) -> Dict:
             )
 
         # Define the file path
-        file_path = f"{data_dir}/data/{data_name}/trajectories/joint_positions.json"
+        file_path = f"{data_dir}/assets/{data_name}/trajectories/joint_positions.json"
 
         # Open and read the JSON file
         with open(file_path, "r") as file:
@@ -184,7 +184,7 @@ def fetch_trajectory_sample_rate(data_name: str) -> float:
             )
 
         # Define the file path
-        file_path = f"{data_dir}/data/{data_name}/information.json"
+        file_path = f"{data_dir}/assets/{data_name}/information.json"
 
         # Open and read the JSON file
         with open(file_path, "r") as file:

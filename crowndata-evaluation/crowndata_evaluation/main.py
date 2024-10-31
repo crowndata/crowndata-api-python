@@ -4,6 +4,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
 from crowndata_evaluation.routers.v1.data.information import information_router
+from crowndata_evaluation.routers.v1.data_process.trajectory import trajectory_router
 from crowndata_evaluation.routers.v1.evaluation.compare_metric_router import (
     compare_metric_router,
 )
@@ -103,4 +104,10 @@ app.include_router(
     analyze_image_router,
     prefix="/v1/openai/analyze-image",
     tags=["OpenAI"],
+)
+
+app.include_router(
+    trajectory_router,
+    prefix="/v1/data-process/trajectory",
+    tags=["Data Process"],
 )

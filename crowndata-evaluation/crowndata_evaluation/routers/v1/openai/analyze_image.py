@@ -22,8 +22,8 @@ class AnalyzeImageRequest(BaseModel):
     imgs: List[str] = Field(
         None,
         example=[
-            "data/droid_00000000/images/wrist_image_left__image_00000005.webp",
-            "data/droid_00000000/images/wrist_image_left__image_00000165.webp",
+            "assets/droid_00000000/images/wrist_image_left__image_00000005.webp",
+            "assets/droid_00000000/images/wrist_image_left__image_00000165.webp",
         ],
     )
     prompt: str = Field(None, example="Has the item been moved? yes or no only.")
@@ -73,7 +73,6 @@ async def post(request: AnalyzeImageRequest):
         }
         for base64_image in base64_images
     ]
-    
     response = {}
     if client:
         response = client.chat.completions.create(
