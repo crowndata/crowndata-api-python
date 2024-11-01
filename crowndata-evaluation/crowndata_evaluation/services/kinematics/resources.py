@@ -47,15 +47,12 @@ def get_urdf_file_path(urdf: str):
         return urdf_map.get(urdf, None).get("urdf_file_path", None)
 
 
-def h5_to_dict(data):
+def h5_to_dict(group, path=""):
     """Recursively loads an h5py group into a dictionary."""
     data = {}
-    if isinstance(data, h5py.Group):
-        for key, item in data.items():
-            if isinstance(
-                item, h5py.Dataset
-            ):  # If it's a dataset, read it into the dictionary
-                data[key] = item[:]
-            elif isinstance(item, h5py.Group):  # If it's a group, call recursively
-                data[key] = h5_to_dict(item)
+    for key, item in group.items():
+        if isinstance(item, h5py.Dataset):  # If it's a dataset, load the data
+            data[path + key] = item[()]  # Load the dataset as a numpy array
+        elif isinstance(item, h5py.Group):  # If it's a group, recurse into it
+            data.update(h5_to_dict(item, path + key + "/"))
     return data

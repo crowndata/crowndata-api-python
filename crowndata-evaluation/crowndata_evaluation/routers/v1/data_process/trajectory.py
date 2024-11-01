@@ -1,7 +1,9 @@
 import os
 import subprocess
+import time
 from typing import List, Literal, Optional
 
+import cv2
 import h5py
 import numpy as np
 import pandas as pd
@@ -32,13 +34,16 @@ class TrajectoryRequest(BaseModel):
         None, example="data/rm65_abc_20241031_010921/rm65_abc_20241031_010921.h5"
     )
     targetDir: str = Field(None, example="assets/rm65_abc_20241031_010921")
+    cameras: List[str] = Field(
+        None, example=["cam_high", "cam_left_wrist", "cam_right_wrist", "cam_low"]
+    )
 
 
 # Response model
 class TrajectoryResponse(BaseModel):
     status: Literal["success", "failure", None] = Field(None, example="success")
     messages: Optional[List[str]] = Field(
-        None, example=["Cannot process trajectory. Missing Field"]
+        None, example=["Cannot process trajectory. Or Missing Field"]
     )
 
 
@@ -49,8 +54,10 @@ class TrajectoryResponse(BaseModel):
     response_model=TrajectoryResponse,
 )
 async def post(request: TrajectoryRequest):
+    start_time = time.time()
     source_path = f"{data_dir}/{request.sourcePath}"
     target_dir = f"{data_dir}/{request.targetDir}"
+    cameras = request.cameras
     urdf = request.urdf
 
     # Load the URDF model
@@ -120,6 +127,50 @@ async def post(request: TrajectoryRequest):
             messages.append(
                 f"Created New trajectory file for joint {joint_name}: {df_file_path}"
             )
+
+        #### Process Images ####
+        images = {}
+        for i, camera in enumerate(cameras):
+            camera_images = trajectory_data["observations"][f"images/{camera}"]
+            if camera not in images.keys():
+                images[camera] = []
+                output_folder = f"{target_dir}/images"
+                subprocess.call(["mkdir", "-p", output_folder])
+            for camera_image in camera_images:
+                decoded_image = cv2.imdecode(camera_image, cv2.IMREAD_COLOR)
+
+                # Get the current width and height of the image
+                height, width, channels = decoded_image.shape
+
+                # Calculate the new width while keeping the aspect ratio
+                aspect_ratio = width / height
+                new_height = 50
+                new_width = int(new_height * aspect_ratio)
+
+                # Resize the image
+                resized_image = cv2.resize(decoded_image, (new_width, new_height))
+
+                # Save or show the resized image
+                images[camera].append(resized_image)
+            df_img = pd.DataFrame()
+
+        for camera in images:
+            for j, image in enumerate(images[camera]):
+                # Save the image in WebP format
+                cv2.imwrite(f"{target_dir}/images/{camera}__image_{j:08d}.webp", image)
+            df_img[camera] = [f"{camera}__image_{j:08d}.webp" for j in range(len(df))]
+            messages.append(
+                f"Created New file of downsized images for camera: {camera}."
+            )
+
+        df_file_path = f"{target_dir}/images/camera_images.json"
+        df_img.to_json(
+            df_file_path,
+            orient="split",
+            index=False,
+        )
+        messages.append(f"Created New file for Image path: {df_file_path}")
+        messages.append(f"Finished: {(time.time() - start_time):.2f} seconds")
 
     except (
         Exception

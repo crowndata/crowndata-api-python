@@ -4,6 +4,9 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
 from crowndata_evaluation.routers.v1.data.information import information_router
+from crowndata_evaluation.routers.v1.data_process.information import (
+    data_process_information_router,
+)
 from crowndata_evaluation.routers.v1.data_process.trajectory import trajectory_router
 from crowndata_evaluation.routers.v1.evaluation.compare_metric_router import (
     compare_metric_router,
@@ -109,5 +112,11 @@ app.include_router(
 app.include_router(
     trajectory_router,
     prefix="/v1/data-process/trajectory",
+    tags=["Data Process"],
+)
+
+app.include_router(
+    data_process_information_router,
+    prefix="/v1/data-process/information",
     tags=["Data Process"],
 )
