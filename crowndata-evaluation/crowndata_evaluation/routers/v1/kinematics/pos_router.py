@@ -39,7 +39,7 @@ class PosResponse(BaseModel):
 )
 async def post(request: PosRequest):
     urdf_file_path = get_urdf_file_path(request.urdf)
-    robot = get_robot_from_urdf(f"{data_dir}/{request.urdf}")
+    robot = get_robot_from_urdf(f"{urdf_file_path}")
 
     joint_data = fetch_joint_json(data_name=request.dataName)
     joint_records = pd.DataFrame(

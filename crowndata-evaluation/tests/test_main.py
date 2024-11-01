@@ -244,3 +244,77 @@ def test_compare_single_to_group_router(payload, expected_status, expected_respo
     assert response.status_code == expected_status
     if expected_response:
         assert response.json() == expected_response
+
+
+@pytest.mark.parametrize(
+    "payload, expected_status, expected_response",
+    [
+        (
+            {"dataName": "droid_00000000"},
+            200,
+            None,
+        ),
+    ],
+)
+def test_data_information(payload, expected_status, expected_response):
+    response = client.post("/v1/data/information", json=payload)
+    assert response.status_code == expected_status
+    if expected_response:
+        assert response.json() == expected_response
+
+
+@pytest.mark.parametrize(
+    "payload, expected_status, expected_response",
+    [
+        (
+            {
+                "urdf": "droid",
+                "dataName": "droid_00000000",
+                "linkName": "robotiq_85_adapter_link",
+            },
+            200,
+            None,
+        ),
+    ],
+)
+def test_kinematics_pos(payload, expected_status, expected_response):
+    response = client.post("/v1/kinematics/pos", json=payload)
+    assert response.status_code == expected_status
+    if expected_response:
+        assert response.json() == expected_response
+
+
+@pytest.mark.parametrize(
+    "payload, expected_status, expected_response",
+    [
+        (
+            {
+                "targetDir": "assets/rm65_abc_20241031_010921",
+                "dataName": "robot_data_example",
+                "startTime": "20230417T144805.000Z",
+                "endTime": "20230417T145051.000Z",
+                "robotEmbodiment": "rm_65_gazebo_dual_gripper",
+                "robotSerialNumber": "rm_65_123456",
+                "videoSamplingRate": 50,
+                "armSamplingRate": 50,
+                "sensorSamplingRate": 50,
+                "operatorName": "Crown Data",
+                "taskDescription": "Sample Task",
+                "subtaskDescription": "Subtask Description",
+                "taskState": "SUCCESS",
+                "subtaskState": "SUCCESS",
+                "dataLength": 0,
+                "durationInSeconds": 0,
+                "cameras": ["cam_high", "cam_left_wrist", "cam_right_wrist", "cam_low"],
+                "dataSource": "https://droid-dataset.github.io/droid/the-droid-dataset",
+            },
+            200,
+            None,
+        ),
+    ],
+)
+def test_data_process_information(payload, expected_status, expected_response):
+    response = client.post("/v1/data-process/information", json=payload)
+    assert response.status_code == expected_status
+    if expected_response:
+        assert response.json() == expected_response

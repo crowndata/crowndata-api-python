@@ -86,8 +86,8 @@ async def post(request: TrajectoryRequest):
         joint_positions[:, :6] = np.radians(joint_positions[:, :6])
         joint_positions[:, 7:13] = np.radians(joint_positions[:, :6])
         # convert to meter
-        joint_positions[:, 6] = joint_positions[:, 6] / 1000.0 * 60
-        joint_positions[:, 13] = joint_positions[:, 13] / 1000.0 * 60
+        joint_positions[:, 6] = joint_positions[:, 6] / 1000.0 * 60.0 / 1000.0
+        joint_positions[:, 13] = joint_positions[:, 13] / 1000.0 * 60.0 / 1000.0
 
         columns = [f"joint{i}" for i in range(1, len(trajectory_data["action"][0]) + 1)]
         if len(trajectory_data["action"][0]) == len(movable_joints):
@@ -130,13 +130,14 @@ async def post(request: TrajectoryRequest):
 
         #### Process Images ####
         images = {}
+        df_img = pd.DataFrame()
         for i, camera in enumerate(cameras):
             camera_images = trajectory_data["observations"][f"images/{camera}"]
             if camera not in images.keys():
                 images[camera] = []
                 output_folder = f"{target_dir}/images"
                 subprocess.call(["mkdir", "-p", output_folder])
-            for camera_image in camera_images:
+            for j, camera_image in enumerate(camera_images):
                 decoded_image = cv2.imdecode(camera_image, cv2.IMREAD_COLOR)
 
                 # Get the current width and height of the image
@@ -150,18 +151,15 @@ async def post(request: TrajectoryRequest):
                 # Resize the image
                 resized_image = cv2.resize(decoded_image, (new_width, new_height))
 
-                # Save or show the resized image
-                images[camera].append(resized_image)
-            df_img = pd.DataFrame()
-
-        for camera in images:
-            for j, image in enumerate(images[camera]):
                 # Save the image in WebP format
-                cv2.imwrite(f"{target_dir}/images/{camera}__image_{j:08d}.webp", image)
-            df_img[camera] = [f"{camera}__image_{j:08d}.webp" for j in range(len(df))]
+                cv2.imwrite(
+                    f"{target_dir}/images/{camera}__image_{j:08d}.webp", resized_image
+                )
+
             messages.append(
                 f"Created New file of downsized images for camera: {camera}."
             )
+            df_img[camera] = [f"{camera}__image_{j:08d}.webp" for j in range(len(df))]
 
         df_file_path = f"{target_dir}/images/camera_images.json"
         df_img.to_json(

@@ -111,6 +111,7 @@ async def post(request: InformationRequest):
     subprocess.call(["mkdir", "-p", f"{target_dir}"])
     with open(f"{target_dir}/information.json", "w") as json_file:
         json.dump(information, json_file, indent=2)
+
     messages.append(f"Information: {information}")
     messages.append(f"Finished: {(time.time() - start_time):.2f} seconds")
 
