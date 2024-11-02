@@ -4,6 +4,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
 from crowndata_evaluation.routers.v1.data.information import information_router
+from crowndata_evaluation.routers.v1.data.list import data_list_router
+from crowndata_evaluation.routers.v1.data.list_image import data_list_image_router
 from crowndata_evaluation.routers.v1.data_process.information import (
     data_process_information_router,
 )
@@ -93,6 +95,18 @@ app.include_router(
 app.include_router(
     information_router,
     prefix="/v1/data/information",
+    tags=["Data"],
+)
+
+app.include_router(
+    data_list_router,
+    prefix="/v1/data/list",
+    tags=["Data"],
+)
+
+app.include_router(
+    data_list_image_router,
+    prefix="/v1/data/list-image",
     tags=["Data"],
 )
 

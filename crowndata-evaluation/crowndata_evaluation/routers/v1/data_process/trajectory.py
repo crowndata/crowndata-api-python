@@ -84,7 +84,7 @@ async def post(request: TrajectoryRequest):
         joint_positions = trajectory_data["action"]
         # convert to radian
         joint_positions[:, :6] = np.radians(joint_positions[:, :6])
-        joint_positions[:, 7:13] = np.radians(joint_positions[:, :6])
+        joint_positions[:, 7:13] = np.radians(joint_positions[:, 7:13])
         # convert to meter
         joint_positions[:, 6] = joint_positions[:, 6] / 1000.0 * 60.0 / 1000.0
         joint_positions[:, 13] = joint_positions[:, 13] / 1000.0 * 60.0 / 1000.0
@@ -129,14 +129,10 @@ async def post(request: TrajectoryRequest):
             )
 
         #### Process Images ####
-        images = {}
         df_img = pd.DataFrame()
+        subprocess.call(["mkdir", "-p", f"{target_dir}/images"])
         for i, camera in enumerate(cameras):
             camera_images = trajectory_data["observations"][f"images/{camera}"]
-            if camera not in images.keys():
-                images[camera] = []
-                output_folder = f"{target_dir}/images"
-                subprocess.call(["mkdir", "-p", output_folder])
             for j, camera_image in enumerate(camera_images):
                 decoded_image = cv2.imdecode(camera_image, cv2.IMREAD_COLOR)
 

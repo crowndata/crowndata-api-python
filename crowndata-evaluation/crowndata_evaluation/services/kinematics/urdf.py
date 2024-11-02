@@ -62,7 +62,6 @@ def matrix_to_rpy(matrix: np.ndarray) -> List[float]:
 def joint_transform(joint, angle: float) -> np.ndarray:
     """Compute the transformation matrix for a joint."""
     T_origin = get_transform_from_origin(joint.origin)
-
     if joint.type == "revolute" or joint.type == "continuous":
         # For a revolute joint, rotate around the joint axis
         axis = np.array(joint.axis)
@@ -93,27 +92,24 @@ def forward_kinematics(
     robot, joint_records: List[Dict[str, float]], link_name: str
 ) -> List[List[float]]:
     """Compute the positions of each joint and link based on joint angles."""
-    T = np.eye(4)  # Starting from the base frame
-    positions = []
 
+    positions = []
     ancestors = robot.get_chain(robot.get_root(), link_name)
     joint_map = {joint.name: joint for joint in robot.joints}
 
     for joint_record in joint_records:
+        T = np.eye(4)  # Starting from the base frame
         for joint_name in ancestors:
             if joint_name in joint_map.keys():
                 joint = joint_map[joint_name]
                 angle = joint_record.get(joint.name, 0.0)  # Get angle or default to 0
-                angle = joint_record.get(joint.name, 0.0)  # Get angle or default to 0
                 T = T @ joint_transform(joint, angle)  # Apply joint transformation
-
                 if joint.child == link_name:
                     position = [
                         round(num, 4) for num in T[:3, 3].tolist() + matrix_to_rpy(T)
                     ]
                     positions.append(position)  # Store the position of each link
                     break
-
     return positions
 
 

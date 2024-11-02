@@ -619,8 +619,8 @@
     name="joint_base"
     type="fixed">
     <origin
-      xyz="1.02 0 0"
-      rpy="0 0 3.1416" />
+      xyz="0 -1.02 0"
+      rpy="0 0 0" />
     <parent
       link="base_link" />
     <child
