@@ -7,6 +7,8 @@ WORKDIR /crowndata-evaluation
 # Copy the contents of the current directory on your host to the container
 COPY . /crowndata-evaluation
 
+RUN pip install --upgrade pip
+
 # Install Poetry
 RUN pip install poetry
 
